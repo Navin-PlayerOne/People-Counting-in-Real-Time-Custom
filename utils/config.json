@@ -8,5 +8,6 @@
     "Thread": false,
     "Log": false,
     "Scheduler": false,
-    "Timer": false
+    "Timer": false,
+    "Display": 0
 }

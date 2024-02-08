@@ -224,9 +224,10 @@ def people_counter():
 		# draw a horizontal line in the center of the frame -- once an
 		# object crosses this line we will determine whether they were
 		# moving 'up' or 'down'
-		cv2.line(frame, (0, H // 2), (W, H // 2), (0, 0, 0), 3)
-		cv2.putText(frame, "-Prediction border - Entrance-", (10, H - ((i * 20) + 200)),
-			cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+		if config["Display"]:
+			cv2.line(frame, (0, H // 2), (W, H // 2), (0, 0, 0), 3)
+			cv2.putText(frame, "-Prediction border - Entrance-", (10, H - ((i * 20) + 200)),
+						cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
 		# use the centroid tracker to associate the (1) old object
 		# centroids with (2) the newly computed object centroids
@@ -275,8 +276,9 @@ def people_counter():
 						in_time.append(date_time)
 						# if the people limit exceeds over threshold, send an email alert
 						if sum(total) >= config["Threshold"]:
-							cv2.putText(frame, "-ALERT: People limit exceeded-", (10, frame.shape[0] - 80),
-								cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), 2)
+							if config["Display"]:
+								cv2.putText(frame, "-ALERT: People limit exceeded-", (10, frame.shape[0] - 80),
+											cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), 2)
 							if config["ALERT"]:
 								logger.info("Sending email alert..")
 								email_thread = threading.Thread(target = send_mail)
@@ -294,9 +296,10 @@ def people_counter():
 			# draw both the ID of the object and the centroid of the
 			# object on the output frame
 			text = "ID {}".format(objectID)
-			cv2.putText(frame, text, (centroid[0] - 10, centroid[1] - 10),
-				cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-			cv2.circle(frame, (centroid[0], centroid[1]), 4, (255, 255, 255), -1)
+			if config["Display"]:
+				cv2.putText(frame, text, (centroid[0] - 10, centroid[1] - 10),
+							cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+				cv2.circle(frame, (centroid[0], centroid[1]), 4, (255, 255, 255), -1)
 
 		# construct a tuple of information we will be displaying on the frame
 		info_status = [
@@ -310,14 +313,16 @@ def people_counter():
 		]
 
 		# display the output
-		for (i, (k, v)) in enumerate(info_status):
-			text = "{}: {}".format(k, v)
-			cv2.putText(frame, text, (10, H - ((i * 20) + 20)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
+		if config["Display"]:
+			for (i, (k, v)) in enumerate(info_status):
+				text = "{}: {}".format(k, v)
+				cv2.putText(frame, text, (10, H - ((i * 20) + 20)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
 
-		for (i, (k, v)) in enumerate(info_total):
-			text = "{}: {}".format(k, v)
-			cv2.putText(frame, text, (265, H - ((i * 20) + 60)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-
+			for (i, (k, v)) in enumerate(info_total):
+				text = "{}: {}".format(k, v)
+				cv2.putText(frame, text, (265, H - ((i * 20) + 60)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+		else:
+			print(info_status)
 		# initiate a simple log to save the counting data
 		if config["Log"]:
 			log_data(move_in, in_time, move_out, out_time)
@@ -326,12 +331,13 @@ def people_counter():
 		if writer is not None:
 			writer.write(frame)
 
-		# show the output frame
-		cv2.imshow("Real-Time Monitoring/Analysis Window", frame)
-		key = cv2.waitKey(1) & 0xFF
-		# if the `q` key was pressed, break from the loop
-		if key == ord("q"):
-			break
+		if config["Display"]:
+			# show the output frame
+			cv2.imshow("Real-Time Monitoring/Analysis Window", frame)
+			key = cv2.waitKey(1) & 0xFF
+			# if the `q` key was pressed, break from the loop
+			if key == ord("q"):
+				break
 		# increment the total number of frames processed thus far and
 		# then update the FPS counter
 		totalFrames += 1
