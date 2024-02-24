@@ -18,6 +18,41 @@ import json
 import csv
 import cv2
 
+class ObservableList:
+    def __init__(self, initial_data=None):
+        self._data = initial_data if initial_data is not None else []
+        self._observers = []
+
+    def add_observer(self, observer):
+        self._observers.append(observer)
+
+    def remove_observer(self, observer):
+        self._observers.remove(observer)
+
+    def _notify_observers(self):
+        for observer in self._observers:
+            observer.notify(self)
+
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, new_data):
+        if self._data != new_data:  # Check if new data is different
+            self._data = new_data
+            self._notify_observers()
+
+class Observer:
+    def notify(self, observable_list):
+        print("List changed:")
+        for item in observable_list.data:
+            print(item)
+
+observable_list = ObservableList()
+observer = Observer()
+observable_list.add_observer(observer)
+
 # execution start time
 start_time = time.time()
 # setup logger
@@ -304,9 +339,10 @@ def people_counter():
 		# construct a tuple of information we will be displaying on the frame
 		info_status = [
 		("Exit", totalUp),
-		("Enter", totalDown),
-		("Status", status),
+		("Enter", totalDown)
 		]
+
+		observable_list.data = info_status
 
 		info_total = [
 		("Total people inside", ', '.join(map(str, total))),
@@ -321,8 +357,6 @@ def people_counter():
 			for (i, (k, v)) in enumerate(info_total):
 				text = "{}: {}".format(k, v)
 				cv2.putText(frame, text, (265, H - ((i * 20) + 60)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-		else:
-			print(info_status)
 		# initiate a simple log to save the counting data
 		if config["Log"]:
 			log_data(move_in, in_time, move_out, out_time)
